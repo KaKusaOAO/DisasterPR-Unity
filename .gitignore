@@ -26,6 +26,7 @@ crashlytics-build.properties
 /[Bb]in/
 /[Ll]ibrary/
 /[Tt]emp/
+/[Ll]ogs/
 /[Oo]bj/
 *.csproj
 *.sln
