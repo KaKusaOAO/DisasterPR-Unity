@@ -25,11 +25,7 @@ public class WinScreen : MonoBehaviour, IScreen
     {
         var manager = GameManager.Instance;
         if (manager.Connection == null) return;
-
-        _ = Task.Run(async () =>
-        {
-            await manager.Connection.SendPacketAsync(new ServerboundLeaveRoomPacket());
-        });
+        manager.Connection.SendPacket(new ServerboundLeaveRoomPacket());
         
         UIManager.Instance.AddTransitionStinger(() =>
         {

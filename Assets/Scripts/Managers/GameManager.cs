@@ -6,8 +6,8 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using DisasterPR;
-using DisasterPR.Client;
-using DisasterPR.Client.Sessions;
+using DisasterPR.Client.Unity;
+using DisasterPR.Client.Unity.Sessions;
 using DisasterPR.Events;
 using DisasterPR.Exceptions;
 using DisasterPR.Net.Packets.Login;
@@ -39,14 +39,9 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         _instance = this;
-        DontDestroyOnLoad(gameObject);
-    }
-
-    static GameManager()
-    {
-        Logger.Logged += async e =>
+        
+        Logger.Logged += e =>
         {
-            await Task.Yield();
             Instance.RunOnUnityThread(() =>
             {
                 var tag = e.Tag.ToPlainText();
@@ -66,15 +61,18 @@ public class GameManager : MonoBehaviour
                         break;
                 }
             });
+            return Task.CompletedTask;
         };
+        Logger.RunManualPoll();
+        Debug.Log("Registered logger");
         
-        Logger.RunThreaded();
+        DontDestroyOnLoad(gameObject);
     }
 
     public void ResetGame()
     {
         if (_game == null) return;
-        _game.Player?.Connection.WebSocket.Dispose();
+        _game.Player?.Connection.WebSocket.Close();
         _game = null;
     }
 
@@ -329,7 +327,7 @@ public class GameManager : MonoBehaviour
             Connection.Disconnected -= OnConnectionUnexpectedDisconnected;
         }
 
-        _ = Connection?.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+        Connection?.WebSocket.Close();
         _game = null;
     }
     
@@ -341,6 +339,8 @@ public class GameManager : MonoBehaviour
         {
             if (!_queue.TryDequeue(out var action)) continue;
             action();
+            
+            Logger.PollEvents();
         }
     }
 
@@ -352,6 +352,9 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+#if UNITY_WEBGL
+            Debug.LogWarning("Should not be using this!");
+#endif
             _queue.Enqueue(action);
         }
     }

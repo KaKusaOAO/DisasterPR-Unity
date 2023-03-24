@@ -26,10 +26,7 @@ public class HostRoomButton : MonoBehaviour
         var manager = GameManager.Instance;
         if (manager.Game == null) return;
 
-        _ = Task.Run(async () =>
-        {
-            lobbyScreen.State = LobbyScreen.RoomJoinState.Joining;
-            await manager.Connection!.SendPacketAsync(new ServerboundHostRoomPacket());
-        });
+        lobbyScreen.State = LobbyScreen.RoomJoinState.Joining;
+        manager.Connection!.SendPacket(new ServerboundHostRoomPacket());
     }
 }

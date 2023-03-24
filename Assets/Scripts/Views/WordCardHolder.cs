@@ -53,11 +53,7 @@ public class WordCardHolder : MonoBehaviour
         if (session.GameState.CurrentPlayer != player) return;
         
         var entry = session.GameState.CurrentChosenWords[index];
-
-        _ = Task.Run(async () =>
-        {
-            await player.Connection.SendPacketAsync(new ServerboundRevealChosenWordEntryPacket(entry.Id));
-        });
+        player.Connection.SendPacket(new ServerboundRevealChosenWordEntryPacket(entry.Id));
     }
     
     // public IChosenWordEntryItem Item =>

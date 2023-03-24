@@ -16,17 +16,14 @@ public class LeaveRoomButton : MonoBehaviour
 
     public void OnButtonClick()
     {
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
+        
         var manager = GameManager.Instance;
         if (manager.Connection == null) return;
-
-        _ = Task.Run(async () =>
-        {
-            await manager.Connection.SendPacketAsync(new ServerboundLeaveRoomPacket());
-            manager.RunOnUnityThread(() => 
-                AudioManager.Instance.PlayOneShot(AudioManager.Instance.leftRoomFX));
-        });
         
-        AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
+        manager.Connection.SendPacket(new ServerboundLeaveRoomPacket());
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.leftRoomFX);
+        
         UIManager.Instance.AddTransitionStinger(() =>
         {
             var screens = ScreenManager.Instance;

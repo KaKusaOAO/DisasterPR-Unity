@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DisasterPR;
-using DisasterPR.Cards;
-using DisasterPR.Client.Sessions;
 using DisasterPR.Sessions;
 using JetBrains.Annotations;
 using KaLib.Utils.Extensions;
@@ -212,17 +210,10 @@ public class GameScreen : MonoBehaviour, IScreen
             return;
         }
 
-        _ = Task.Run(async () =>
-        {
-            var indices = LocalSelectedWords.Select(w => player.HoldingCards.IndexOf(w)).ToHashSet();
-            await session.LocalGameState.ChooseWordAsync(indices);
-            LocalSelectedWords.Clear();
-            
-            manager.RunOnUnityThread(() =>
-            {
-                AudioManager.Instance.PlayOneShot(AudioManager.Instance.wordSelectFX);
-            });
-        });
+        var indices = LocalSelectedWords.Select(w => player.HoldingCards.IndexOf(w)).ToHashSet();
+        session.LocalGameState.ChooseWord(indices);
+        LocalSelectedWords.Clear();
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.wordSelectFX);
     }
 
     public void SubmitSelectedFinal()
@@ -233,11 +224,8 @@ public class GameScreen : MonoBehaviour, IScreen
         var player = manager.Player;
         var session = player?.Session;
         if (session == null) return;
-
-        _ = Task.Run(async () =>
-        {
-            await session.LocalGameState.ChooseFinalAsync(LocalChosenFinalIndex);
-        });
+        
+        session.LocalGameState.ChooseFinal(LocalChosenFinalIndex);
     }
 
     public void OnTransitionedOut()

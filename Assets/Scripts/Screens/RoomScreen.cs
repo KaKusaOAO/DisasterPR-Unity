@@ -74,11 +74,9 @@ public class RoomScreen : MonoBehaviour, IScreen
         var score = Math.Clamp(value, 2, 9);
         session.Options.WinScore = score;
 
-        _ = Task.Run(async () =>
-        {
-            var manager = GameManager.Instance;
-            await manager.Connection.SendPacketAsync(new ServerboundUpdateSessionOptionsPacket(manager.Session));
-        });
+        
+        var manager = GameManager.Instance;
+        manager.Connection!.SendPacket(new ServerboundUpdateSessionOptionsPacket(manager.Session!));
     }
 
     public void MoreCountdownTimeClicked() => OffsetCountdownTime(1);
@@ -98,14 +96,12 @@ public class RoomScreen : MonoBehaviour, IScreen
             c.FinalChooseTime == option.FinalChooseTime);
         var index = CountdownTimeSet.TimeSets.IndexOf(target);
         var newIndex = Math.Clamp(index + offset, 0, CountdownTimeSet.TimeSets.Count - 1);
-        session.Options.CountdownTimeSet = CountdownTimeSet.TimeSets[newIndex];
-        AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
         
-        _ = Task.Run(async () =>
-        {
-            var manager = GameManager.Instance;
-            await manager.Connection.SendPacketAsync(new ServerboundUpdateSessionOptionsPacket(manager.Session));
-        });
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
+        var manager = GameManager.Instance;
+        var options = manager.Session!.Options;
+        manager.Connection!.SendPacket(new ServerboundUpdateSessionOptionsPacket(
+            options.WinScore, CountdownTimeSet.TimeSets[newIndex], options.EnabledCategories));
     }
 
     void Update()
@@ -230,11 +226,7 @@ public class RoomScreen : MonoBehaviour, IScreen
         if (session == null) return;
         
         AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
-
-        _ = Task.Run(async () =>
-        {
-            await game.Player.Connection.SendPacketAsync(new ServerboundRequestRoomStartPacket());
-        });
+        game.Player.Connection.SendPacket(new ServerboundRequestRoomStartPacket());
     }
 
     public void OnTransitionedIn()
@@ -270,10 +262,7 @@ public class RoomScreen : MonoBehaviour, IScreen
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerListContainer.GetComponent<RectTransform>());
 
         game.Player.State = PlayerState.Ready;
-        _ = Task.Run(async () =>
-        {
-            await game.Player.Connection.SendPacketAsync(new ServerboundUpdatePlayerStatePacket(game.Player));
-        });
+        game.Player.Connection.SendPacket(new ServerboundUpdatePlayerStatePacket(game.Player));
     }
 
     public void OnTransitionedOut()

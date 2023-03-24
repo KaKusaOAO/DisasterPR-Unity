@@ -67,9 +67,6 @@ public class PlayerItemEntry : MonoBehaviour
         if (session == null) return;
         
         var player = session.Players[index];
-        _ = Task.Run(async () =>
-        {
-            await game.Player.Connection.SendPacketAsync(new ServerboundRequestKickPlayerPacket(player));
-        });
+        game.Player.Connection.SendPacket(new ServerboundRequestKickPlayerPacket(player));
     }
 }

@@ -43,11 +43,6 @@ public class TopicPaper : MonoBehaviour
     public void OnButtonClicked()
     {
         var manager = GameManager.Instance;
-        if (manager.Connection == null) return;
-
-        _ = Task.Run(async () =>
-        {
-            await manager.Connection.SendPacketAsync(new ServerboundChooseTopicPacket(side));
-        });
+        manager.Connection?.SendPacket(new ServerboundChooseTopicPacket(side));
     }
 }

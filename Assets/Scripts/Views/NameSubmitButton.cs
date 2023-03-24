@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
 using System.Threading;
 using DisasterPR;
 using DisasterPR.Client;
+using DisasterPR.Client.Unity;
 using DisasterPR.Events;
+using HybridWebSocket;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -87,6 +90,7 @@ public class NameSubmitButton : MonoBehaviour
         }
     }
 
+
     public void OnButtonClick()
     {
         var audios = AudioManager.Instance;
@@ -97,36 +101,35 @@ public class NameSubmitButton : MonoBehaviour
         
         var game = manager.CreateGame(new GameOptions
         {
+            WebSocket = WebSocketFactory.CreateInstance(Constants.ServerUri.ToString()),
             PlayerName = inputField.text
         });
         
+        Debug.Log("Logging in...");
         State = LoginState.LoggingIn;
-        _ = Task.Run(async () =>
-        {
-            var task = game.LoginPlayerAsync(GameManager.DefaultTimeoutToken);
-            await Task.WhenAny(task, Task.Delay(6000));
+        game.LoginPlayer();
 
-            Logger.Verbose("Checking connection...");
-            if (!game.Player!.Connection.IsConnected)
+        Debug.Log("Logged in!");
+        Debug.Log("Checking connection...");
+        if (!game.Player!.Connection.IsConnected)
+        {
+            Debug.Log("Connection is dead");
+            State = LoginState.Error;
+            DisconnectReason = new DisconnectedEventArgs()
             {
-                Logger.Verbose("Connection is dead");
-                State = LoginState.Error;
-                DisconnectReason = new DisconnectedEventArgs()
-                {
-                    Reason = PlayerKickReason.Custom,
-                    Message = "無法連線到伺服器！"
-                };
-                manager.ResetGame();
+                Reason = PlayerKickReason.Custom,
+                Message = "無法連線到伺服器！"
+            };
+            manager.ResetGame();
                 
-                manager.RunOnUnityThread(() =>
-                {
-                    audios.PlayOneShot(audios.loginFailedFX);
-                });
-            }
-            else
+            manager.RunOnUnityThread(() =>
             {
-                Logger.Verbose("Connection is determined alive");
-            }
-        });
+                audios.PlayOneShot(audios.loginFailedFX);
+            });
+        }
+        else
+        {
+            Debug.Log("Connection is determined alive");
+        }
     }
 }

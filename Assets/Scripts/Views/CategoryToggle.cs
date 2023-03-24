@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DisasterPR.Cards;
 using DisasterPR.Net.Packets.Play;
 using TMPro;
 using UnityEngine;
@@ -38,32 +40,31 @@ public class CategoryToggle : MonoBehaviour
     {
         AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
         
-        _ = Task.Run(async () =>
+        
+        var manager = GameManager.Instance;
+        if (manager.Player != manager.Session!.HostPlayer) return;
+            
+        var options = manager.Session.Options;
+        var cardPack = manager.Session.CardPack;
+        var category = cardPack.Categories[index];
+
+        var list = new List<CardCategory>(options.EnabledCategories);
+        var enabled = !categoryEnabled;
+        if (enabled)
         {
-            var manager = GameManager.Instance;
-            if (manager.Player != manager.Session.HostPlayer) return;
-            
-            var options = manager.Session.Options;
-            var cardPack = manager.Session.CardPack;
-            var category = cardPack.Categories[index];
-            
-            var enabled = !categoryEnabled;
-            if (enabled)
-            {
-                options.EnabledCategories.Add(category);
-            }
-            else
-            {
-                options.EnabledCategories.Remove(category);
-            }
+            list.Add(category);
+        }
+        else
+        {
+            list.Remove(category);
+        }
 
-            if (!options.EnabledCategories.Any())
-            {
-                options.EnabledCategories.Add(category);
-            }
+        if (!list.Any())
+        {
+            list.Add(category);
+        }
 
-            ScreenManager.Instance.roomScreen.CountNeedsUpdate = true;
-            await manager.Connection!.SendPacketAsync(new ServerboundUpdateSessionOptionsPacket(manager.Session));
-        });
+        manager.Connection!.SendPacket(new ServerboundUpdateSessionOptionsPacket(
+            options.WinScore, options.CountdownTimeSet, list));
     }
 }

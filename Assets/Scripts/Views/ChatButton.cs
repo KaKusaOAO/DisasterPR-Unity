@@ -29,10 +29,7 @@ public class ChatButton : MonoBehaviour
         var conn = GameManager.Instance.Connection!;
         var content = input.text;
         input.text = "";
-
-        _ = Task.Run(async () =>
-        {
-            await conn.SendPacketAsync(new ServerboundChatPacket(content));
-        });
+        
+        conn.SendPacket(new ServerboundChatPacket(content));
     }
 }

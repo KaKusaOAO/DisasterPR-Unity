@@ -43,10 +43,7 @@ public class JoinRoomButton : MonoBehaviour
         if (manager.Game == null) return;
         var id = int.Parse(roomIdInput.text);
         
-        _ = Task.Run(async () =>
-        {
-            lobbyScreen.State = LobbyScreen.RoomJoinState.Joining;
-            await manager.Connection!.SendPacketAsync(new ServerboundJoinRoomPacket(id));
-        });
+        lobbyScreen.State = LobbyScreen.RoomJoinState.Joining;
+        manager.Connection!.SendPacket(new ServerboundJoinRoomPacket(id));
     }
 }
