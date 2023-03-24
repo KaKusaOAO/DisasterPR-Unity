@@ -72,7 +72,15 @@ public class GameManager : MonoBehaviour
     public void ResetGame()
     {
         if (_game == null) return;
-        _game.Player?.Connection.WebSocket.Close();
+        try
+        {
+            _game.Player?.Connection.WebSocket.Close();
+        }
+        catch (Exception)
+        {
+            // ignored   
+        }
+        
         _game = null;
     }
 
@@ -244,6 +252,8 @@ public class GameManager : MonoBehaviour
                         });
                     });
                 }
+
+                screens.gameScreen.OnChangeToState(gscp.State);
             }
 
             if (packet is ClientboundUpdateTimerPacket utp)
@@ -352,9 +362,6 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-#if UNITY_WEBGL
-            Debug.LogWarning("Should not be using this!");
-#endif
             _queue.Enqueue(action);
         }
     }

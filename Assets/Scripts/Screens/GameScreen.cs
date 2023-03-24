@@ -34,6 +34,9 @@ public class GameScreen : MonoBehaviour, IScreen
 
     public GameObject chooseWordButton;
     public GameObject chooseFinalButton;
+    public GameObject roomIdContainer;
+
+    private TMP_Text _roomIdHintText;
 
     private Vector3 _holdingWordsPosition0;
 
@@ -88,6 +91,11 @@ public class GameScreen : MonoBehaviour, IScreen
         var currPlayer = session.GameState.CurrentPlayer;
         var currPlayerName = currPlayer == player ? "你" : currPlayer.Name;
         currentPlayerText.text = $"值日生：<b>{currPlayerName}</b>";
+
+        if (_roomIdHintText != null)
+        {
+            _roomIdHintText.text = $"房號：{session.RoomId}";
+        }
     }
 
     public void SwitchToFrame(GameObject frame)
@@ -164,7 +172,10 @@ public class GameScreen : MonoBehaviour, IScreen
         var session = player!.Session;
         if (session == null) return;
 
-        var index = session.GameState.CurrentChosenWords.FindIndex(c => c.Id == guid);
+        var words = session.GameState.CurrentChosenWords;
+        var index = words.FindIndex(c => c.Id == guid);
+        Debug.Log($"Appeared chosen word: " +
+                  $"{words[index].Words.Select(w => w.Label).JoinStrings(", ")}");
         _holders[index].OnChosenAppear();
     }
 
@@ -193,6 +204,9 @@ public class GameScreen : MonoBehaviour, IScreen
             it.index = i;
             i++;
         }
+
+        var container = Instantiate(roomIdContainer, playerListContainer);
+        _roomIdHintText = container.GetComponentInChildren<TMP_Text>();
     }
 
     public void SubmitSelectedWords()
@@ -295,5 +309,11 @@ public class GameScreen : MonoBehaviour, IScreen
             anim.sourcePos = source;
             anim.desiredPos = dest;
         }
+    }
+    
+    public void OnChangeToState(StateOfGame state)
+    {
+        LocalSelectedWords.Clear();
+        LocalChosenFinalIndex = -1;
     }
 }

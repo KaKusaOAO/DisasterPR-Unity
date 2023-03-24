@@ -33,15 +33,16 @@ public class VolumeButton : MonoBehaviour
         volume = Mathf.Pow(volume, 1 / 3f);
         var audios = AudioManager.Instance;
         var mixer = audios.audioMixer;
-        mixer.SetFloat("Volume", Mathf.Lerp(-80, -7, volume));
+        mixer.SetFloat("Volume", Mathf.Lerp(-80, 0, volume));
 
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(125);
-            GameManager.Instance.RunOnUnityThread(() =>
-            {
-                audios.PlayOneShot(audios.volumeAdjustFX);
-            });
-        });
+        StartCoroutine(VolumePlayFXSequence());
+    }
+
+    private IEnumerator VolumePlayFXSequence()
+    {
+        yield return new WaitForSeconds(0.125f);
+        
+        var audios = AudioManager.Instance;
+        audios.PlayOneShot(audios.volumeAdjustFX);
     }
 }

@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Threading.Tasks;
 using DisasterPR.Net.Packets.Play;
+using DisasterPR.Sessions;
 using TMPro;
 using UnityEngine;
 
@@ -42,18 +44,26 @@ public class WinScreen : MonoBehaviour, IScreen
         });
     }
 
+    private IEnumerator PartySequence()
+    {
+        yield return new WaitForSeconds(1f);
+        MakePartyParticles();
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.partyFX);
+    }
+
     public void OnTransitionedIn()
     {
         ScreenManager.Instance.SwitchToSpinnerBackground();
-        
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(1000);
-            GameManager.Instance.RunOnUnityThread(() =>
-            {
-                AudioManager.Instance.PlayOneShot(AudioManager.Instance.partyFX);
-            });
-        });
+        StartCoroutine(PartySequence());
+    }
+
+    public void MakePartyParticles()
+    {
+        var emitter = new GameObject();
+        var e = emitter.AddComponent<PartyParticleEmitter>();
+        e.desiredPos = playerNameText.transform.position;
+        emitter.transform.SetParent(UIManager.Instance.canvas.transform);
+        emitter.transform.localScale = Vector3.one;
     }
 
     public void OnTransitionedOut()

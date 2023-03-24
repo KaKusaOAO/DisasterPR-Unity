@@ -152,7 +152,7 @@ var LibraryWebSocket = {
 			if (webSocketState.debug)
 				console.log("[JSLIB WebSocket] Received message:", ev.data);
 
-			if (webSocketState.onMessage === null)
+			if (webSocketState.onMessage == null)
 				return;
 
 			if (ev.data instanceof ArrayBuffer) {
@@ -222,7 +222,7 @@ var LibraryWebSocket = {
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 
-		if (instance.ws === null)
+		if (instance.ws == null)
 			return -3;
 
 		if (instance.ws.readyState === 2)
