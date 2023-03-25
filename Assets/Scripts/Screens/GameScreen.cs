@@ -137,7 +137,7 @@ public class GameScreen : MonoBehaviour, IScreen
                 var holder = Instantiate(wordHolderPrefab, UIManager.Instance.canvas.transform);
                 var h = holder.GetComponent<WordCardHolder>();
                 h.index = i;
-                h.isDouble = session.GameState.CurrentTopic.AnswerCount == 2;
+                h.count = session.GameState.CurrentTopic.AnswerCount;
                 chosenWordsLayout.AddItem(holder);
                 holder.transform.localRotation = Quaternion.Euler(0, 0, 0);
                 _holders.Add(h);
@@ -301,9 +301,7 @@ public class GameScreen : MonoBehaviour, IScreen
             var source = holder.GetComponent<RectTransform>().position;
             var dest = entry.scoreText.rectTransform.position;
             clone.transform.position = source;
-
-            clone.GetComponentInChildren<DoubleChosenWordEntryItem>()?.Disable();
-            clone.GetComponentInChildren<SingleChosenWordEntryItem>()?.Disable();
+            clone.GetComponentInChildren<WordCardStack>()?.Disable();
             
             var anim = clone.AddComponent<WordFinalAnim>();
             anim.sourcePos = source;
@@ -314,6 +312,10 @@ public class GameScreen : MonoBehaviour, IScreen
     public void OnChangeToState(StateOfGame state)
     {
         LocalSelectedWords.Clear();
-        LocalChosenFinalIndex = -1;
+
+        if (state == StateOfGame.ChoosingTopic)
+        {
+            LocalChosenFinalIndex = -1;
+        }
     }
 }

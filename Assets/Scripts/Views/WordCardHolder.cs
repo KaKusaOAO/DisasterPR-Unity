@@ -6,10 +6,9 @@ using UnityEngine.UI;
 public class WordCardHolder : MonoBehaviour
 {
     public int index;
-    public bool isDouble;
+    public int count;
     public Image image;
-    public GameObject singleWordCardPrefab;
-    public GameObject doubleWordCardPrefab;
+    public GameObject wordCardStackPrefab;
     private GameObject _created;
     private Vector3 _desiredPos;
     
@@ -35,15 +34,18 @@ public class WordCardHolder : MonoBehaviour
 
     public void OnChosenAppear()
     {
-        _created = Instantiate(isDouble ? doubleWordCardPrefab : singleWordCardPrefab, transform);
-        Item.Holder = this;
+        _created = Instantiate(wordCardStackPrefab, transform);
+        
+        var item = Item;
+        item.Holder = this;
+        item.Init();
+        
         _desiredPos = _created.transform.localPosition;
-        _created.transform.localPosition += new Vector3(-500, 0, 0);
+        _created!.transform.localPosition += new Vector3(-500, 0, 0);
     }
 
-    public IChosenWordEntryItem Item => _created == null ? null : isDouble
-            ? _created.GetComponent<DoubleChosenWordEntryItem>()
-            : _created.GetComponent<SingleChosenWordEntryItem>();
+    // ReSharper disable once Unity.NoNullPropagation
+    public IChosenWordEntryItem Item => _created?.GetComponent<WordCardStack>();
 
     public void OnClickedReveal()
     {
@@ -55,6 +57,4 @@ public class WordCardHolder : MonoBehaviour
         var entry = session.GameState.CurrentChosenWords[index];
         player.Connection.SendPacket(new ServerboundRevealChosenWordEntryPacket(entry.Id));
     }
-    
-    // public IChosenWordEntryItem Item =>
 }

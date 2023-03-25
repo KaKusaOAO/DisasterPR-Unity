@@ -165,7 +165,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   index: 0
-  isDouble: 0
+  count: 0
   image: {fileID: 1691087050885473606}
-  singleWordCardPrefab: {fileID: 7013118355741720372, guid: 6feda582ceba04476ba18d277b758c21, type: 3}
-  doubleWordCardPrefab: {fileID: 2152097086944311360, guid: 2b613d9d44045430684f8dd85e98a825, type: 3}
+  wordCardStackPrefab: {fileID: 2378789235455802380, guid: 2f405b5d648444e989c292dcb9db5035, type: 3}
