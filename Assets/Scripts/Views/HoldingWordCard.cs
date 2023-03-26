@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using DisasterPR.Net.Packets.Play;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +22,8 @@ public class HoldingWordCard : MonoBehaviour
     
     public GameObject badge;
     public TMP_Text badgeText;
+
+    public WordCardLock cardLock;
     
     // Start is called before the first frame update
     void Start()
@@ -52,7 +55,9 @@ public class HoldingWordCard : MonoBehaviour
         var screen = ScreenManager.Instance.gameScreen;
         selected = screen.LocalSelectedWords.Contains(word);
         labelText.text = word.Card.Label;
+        cardLock.locked = word.IsLocked;
 
+        // Badge code starts, nothing goes under this part!!!!
         var isSingle = session.GameState.CurrentTopic.AnswerCount == 1;
         if (isSingle)
         {
@@ -108,6 +113,17 @@ public class HoldingWordCard : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void OnLockClicked()
+    {
+        var player = GameManager.Instance.Player;
+        var session = player?.Session;
+        if (session == null) return;
+
+        var locked = player.HoldingCards[index].IsLocked;
+        Debug.Log($"Try to set card {index} IsLocked to {!locked}");
+        player.Connection.SendPacket(new ServerboundUpdateLockedWordPacket(index, !locked));
     }
 
     void OnMouseOver()

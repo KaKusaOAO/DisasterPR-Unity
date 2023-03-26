@@ -30,6 +30,7 @@ public class AudioManager : MonoBehaviour
     public AudioClip playerAppearedFX;
     public AudioClip playerRemovedFX;
     public AudioClip volumeAdjustFX;
+    public AudioClip toastFX;
 
     // Start is called before the first frame update
     void Awake()

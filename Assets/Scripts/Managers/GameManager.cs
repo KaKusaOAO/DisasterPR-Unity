@@ -10,6 +10,7 @@ using DisasterPR.Client.Unity;
 using DisasterPR.Client.Unity.Sessions;
 using DisasterPR.Events;
 using DisasterPR.Exceptions;
+using DisasterPR.Net.Packets;
 using DisasterPR.Net.Packets.Login;
 using DisasterPR.Net.Packets.Play;
 using DisasterPR.Sessions;
@@ -94,210 +95,151 @@ public class GameManager : MonoBehaviour
         
         _game = Game.Instance;
         _game.Init(options);
-        
-        _game.Player!.Connection.ReceivedPacket += e =>
+
+        var connection = _game.Player!.Connection;
+        var audios = AudioManager.Instance;
+        var screens = ScreenManager.Instance;
+
+        void AddPacketHandler<T>(Action<T> handler) where T : IPacket => 
+            connection.AddTypedPacketHandler<T>(packet => RunOnUnityThread(() => handler(packet)));
+
+        AddPacketHandler<ClientboundAckPacket>(_ =>
         {
-            var packet = e.Packet;
-            var audios = AudioManager.Instance;
+            screens.landingScreen.button.State = NameSubmitButton.LoginState.Success;
+            audios.PlayOneShot(audios.loginSuccessFX);
+            UIManager.Instance.AddTransitionStinger(() =>
+            {
+                screens.landingScreen.button.State = NameSubmitButton.LoginState.None;
+                screens.SwitchToPage(screens.lobbyScreen);
+            });
+        });
+        
+        AddPacketHandler<ClientboundDisconnectPacket>(packet =>
+        {
+            screens.landingScreen.button.State = NameSubmitButton.LoginState.Error;
+            screens.landingScreen.button.DisconnectReason = new DisconnectedEventArgs
+            {
+                Reason = packet.Reason,
+                Message = packet.Message
+            };
 
-            if (packet is ClientboundAckPacket)
+            audios.PlayOneShot(audios.loginFailedFX);
+        });
+        
+        AddPacketHandler<ClientboundJoinedRoomPacket>(_ =>
+        {
+            screens.lobbyScreen.State = LobbyScreen.RoomJoinState.Succeed;
+            audios.PlayOneShot(audios.joinedRoomFX);
+            UIManager.Instance.AddTransitionStinger(() =>
             {
-                var screens = ScreenManager.Instance;
-                screens.landingScreen.button.State = NameSubmitButton.LoginState.Success;
-                RunOnUnityThread(() =>
-                {
-                    audios.PlayOneShot(audios.loginSuccessFX);
-                    UIManager.Instance.AddTransitionStinger(() =>
-                    {
-                        screens.landingScreen.button.State = NameSubmitButton.LoginState.None;
-                        screens.SwitchToPage(screens.lobbyScreen);
-                    });
-                });
-            }
-            
-            if (packet is ClientboundDisconnectPacket dp)
+                screens.SwitchToPage(screens.roomScreen);
+            });
+        });
+        
+        AddPacketHandler<ClientboundRoomDisconnectedPacket>(packet =>
+        {
+            var screen = screens.lobbyScreen;
+            screen.State = LobbyScreen.RoomJoinState.Failed;
+            screen.LastError = new RoomDisconnectedException(packet);
+
+            if (screen.gameObject.activeInHierarchy)
             {
-                var screens = ScreenManager.Instance;
-                screens.landingScreen.button.State = NameSubmitButton.LoginState.Error;
-                screens.landingScreen.button.DisconnectReason = new DisconnectedEventArgs
-                {
-                    Reason = dp.Reason,
-                    Message = dp.Message
-                };
                 audios.PlayOneShot(audios.loginFailedFX);
+                return;
             }
-            
-            if (packet is ClientboundJoinedRoomPacket)
-            {
-                var screens = ScreenManager.Instance;
-                screens.lobbyScreen.State = LobbyScreen.RoomJoinState.Succeed;
-                RunOnUnityThread(() =>
-                {
-                    audios.PlayOneShot(audios.joinedRoomFX);
-                    UIManager.Instance.AddTransitionStinger(() =>
-                    {
-                        screens.SwitchToPage(screens.roomScreen);
-                    });
-                });
-            }
-
-            if (packet is ClientboundRoomDisconnectedPacket rdp)
-            {
-                var screen = ScreenManager.Instance.lobbyScreen;
-                screen.State = LobbyScreen.RoomJoinState.Failed;
-                screen.LastError = new RoomDisconnectedException(rdp);
-
-                RunOnUnityThread(() =>
-                {
-                    if (screen.gameObject.activeInHierarchy)
-                    {
-                        audios.PlayOneShot(audios.loginFailedFX);
-                        return;
-                    }
                     
-                    audios.PlayOneShot(audios.leftRoomFX);
-                    UIManager.Instance.AddTransitionStinger(() =>
-                    {
-                        ScreenManager.Instance.SwitchToPage(screen);
-                    });
-                });
+            audios.PlayOneShot(audios.leftRoomFX);
+            UIManager.Instance.AddTransitionStinger(() =>
+            {
+                ScreenManager.Instance.SwitchToPage(screen);
+            });
+        });
+        
+        AddPacketHandler<ClientboundSetCardPackPacket>(packet =>
+        {
+            var session = _game.Player.Session;
+            if (session!.GameState.CurrentState == StateOfGame.Waiting)
+            {
+                screens.roomScreen.UpdateCardPack(packet.CardPack);
             }
+        });
+        
+        AddPacketHandler<ClientboundAddPlayerPacket>(packet =>
+        {
+            var session = _game.Player.Session;
+            if (session!.GameState.CurrentState != StateOfGame.Waiting) return;
             
-            if (packet is ClientboundSetCardPackPacket cp)
+            var pl = session.Players.Find(p => packet.PlayerId == p.Id);
+            var index = session.Players.IndexOf(pl);
+            screens.roomScreen.OnAddPlayer(index);
+        });
+        
+        AddPacketHandler<ClientboundRemovePlayerPacket>(_ =>
+        {
+            var session = _game.Player.Session;
+            if (session!.GameState.CurrentState == StateOfGame.Waiting)
             {
-                var session = _game.Player.Session;
-                if (session!.GameState.CurrentState == StateOfGame.Waiting)
-                {
-                    RunOnUnityThread(() => ScreenManager.Instance.roomScreen.UpdateCardPack(cp.CardPack));
-                }
+                screens.roomScreen.OnRemovePlayer();
             }
+        });
+        
+        AddPacketHandler<ClientboundGameStateChangePacket>(packet =>
+        {
+            screens.gameScreen.OnChangeToState(packet.State);
+        });
+        
+        AddPacketHandler<ClientboundUpdateTimerPacket>(packet =>
+        {
+            screens.gameScreen.UpdateTimer(packet.RemainTime);
+        });
+        
+        AddPacketHandler<ClientboundSetWordsPacket>(_ =>
+        {
+            screens.gameScreen.UpdateWords();
+        });
+        
+        AddPacketHandler<ClientboundAddChosenWordEntryPacket>(packet =>
+        {
+            screens.gameScreen.OnAddChosenWord(packet.Id);
+        });
+        
+        AddPacketHandler<ClientboundUpdateSessionOptionsPacket>(_ =>
+        {
+            screens.roomScreen.CountNeedsUpdate = true;
+        });
+        
+        AddPacketHandler<ClientboundRevealChosenWordEntryPacket>(packet =>
+        {
+            screens.gameScreen.OnRevealWord(packet.Guid);
+        });
+        
+        AddPacketHandler<ClientboundSetFinalPacket>(packet =>
+        {
+            screens.gameScreen.OnSetFinal(packet.Index);
+        });
+        
+        AddPacketHandler<ClientboundChatPacket>(packet =>
+        {
+            var line = $"【{packet.Player}】{packet.Content}";
+            audios.PlayOneShot(audios.chatFX);
+            UIManager.Instance.AddChatFlyout(line);
+        });
+        
+        AddPacketHandler<ClientboundUpdateLockedWordPacket>(_ =>
+        {
+            audios.PlayOneShot(audios.popFX);
+        });
+        
+        AddPacketHandler<ClientboundSystemChatPacket>(packet =>
+        {
+            var line = $"{packet.Content}";
+            var f = UIManager.Instance.AddSystemToast(line);
 
-            if (packet is ClientboundAddPlayerPacket adp)
+            if (packet.Level == LogLevel.Error)
             {
-                var session = _game.Player.Session;
-                if (session!.GameState.CurrentState == StateOfGame.Waiting)
-                {
-                    var pl = session.Players.Find(p => adp.PlayerId == p.Id);
-                    var index = session.Players.IndexOf(pl);
-                    RunOnUnityThread(() =>
-                    {
-                        ScreenManager.Instance.roomScreen.OnAddPlayer(index);
-                    });
-                }
+                f.SetErrorStyle();
             }
-            
-            if (packet is ClientboundRemovePlayerPacket rpp)
-            {
-                var session = _game.Player.Session;
-                if (session!.GameState.CurrentState == StateOfGame.Waiting)
-                {
-                    RunOnUnityThread(() =>
-                    {
-                        ScreenManager.Instance.roomScreen.OnRemovePlayer();
-                    });
-                }
-            }
-
-            if (packet is ClientboundGameStateChangePacket gscp)
-            {
-                var screens = ScreenManager.Instance;
-                var screen = screens.gameScreen;
-                
-                if (gscp.State == StateOfGame.Started)
-                {
-                    RunOnUnityThread(() =>
-                    {
-                        audios.PlayOneShot(audios.loginSuccessFX);
-                        UIManager.Instance.AddTransitionStinger(() =>
-                        {
-                            ScreenManager.Instance.SwitchToPage(screen);
-                        });
-                    });
-                }
-
-                if (gscp.State == StateOfGame.ChoosingTopic)
-                {
-                    RunOnUnityThread(() =>
-                    {
-                        audios.PlayOneShot(audios.topicChooseFX);
-                        screen.SwitchToFrame(Player == Session!.GameState.CurrentPlayer ?
-                            screen.chooseTopicFrame : screen.waitChooseTopicFrame);
-                    });
-                }
-
-                if (gscp.State == StateOfGame.ChoosingWord)
-                {
-                    RunOnUnityThread(() =>
-                    {
-                        audios.PlayOneShot(audios.topicAppearFX);
-                        screen.SwitchToFrame(screen.topicFrame);
-                    });
-                }
-                
-                if (gscp.State == StateOfGame.ChoosingFinal)
-                {
-                    RunOnUnityThread(() =>
-                    {
-                        audios.PlayOneShot(audios.finalChooseFX);
-                    });
-                }
-
-                if (gscp.State == StateOfGame.WinResult)
-                {
-                    RunOnUnityThread(() =>
-                    {
-                        UIManager.Instance.AddTransitionStinger(() =>
-                        {
-                            screens.SwitchToPage(screens.winScreen);
-                        });
-                    });
-                }
-
-                screens.gameScreen.OnChangeToState(gscp.State);
-            }
-
-            if (packet is ClientboundUpdateTimerPacket utp)
-            {
-                RunOnUnityThread(() => ScreenManager.Instance.gameScreen.UpdateTimer(utp.RemainTime));
-            }
-
-            if (packet is ClientboundSetWordsPacket)
-            {
-                RunOnUnityThread(() => ScreenManager.Instance.gameScreen.UpdateWords());
-            }
-
-            if (packet is ClientboundAddChosenWordEntryPacket acwep)
-            {
-                RunOnUnityThread(() => ScreenManager.Instance.gameScreen.OnAddChosenWord(acwep.Id));
-            }
-
-            if (packet is ClientboundUpdateSessionOptionsPacket)
-            {
-                ScreenManager.Instance.roomScreen.CountNeedsUpdate = true;
-            }
-
-            if (packet is ClientboundRevealChosenWordEntryPacket cwep)
-            {
-                RunOnUnityThread(() => ScreenManager.Instance.gameScreen.OnRevealWord(cwep.Guid));
-            }
-
-            if (packet is ClientboundSetFinalPacket sfp)
-            {
-                RunOnUnityThread(() => ScreenManager.Instance.gameScreen.OnSetFinal(sfp.Index));
-            }
-
-            if (packet is ClientboundChatPacket chat)
-            {
-                RunOnUnityThread(() =>
-                {
-                    var line = $"【{chat.Player}】{chat.Content}";
-                    audios.PlayOneShot(audios.chatFX);
-                    UIManager.Instance.AddChatFlyout(line);
-                });
-            }
-
-            return Task.CompletedTask;
-        };
+        });
 
         _game.Player!.Connection.Disconnected += OnConnectionUnexpectedDisconnected;
         

@@ -174,8 +174,10 @@ public class GameScreen : MonoBehaviour, IScreen
 
         var words = session.GameState.CurrentChosenWords;
         var index = words.FindIndex(c => c.Id == guid);
+        #if UNITY_EDITOR
         Debug.Log($"Appeared chosen word: " +
                   $"{words[index].Words.Select(w => w.Label).JoinStrings(", ")}");
+        #endif
         _holders[index].OnChosenAppear();
     }
 
@@ -218,9 +220,18 @@ public class GameScreen : MonoBehaviour, IScreen
         var session = player?.Session;
         if (session == null) return;
 
-        if (LocalSelectedWords.Count != session.GameState.CurrentTopic.AnswerCount)
+        if (LocalSelectedWords.Any(w => w.IsLocked))
         {
             AudioManager.Instance.PlayOneShot(AudioManager.Instance.errorFX);
+            UIManager.Instance.AddSystemToast("不能提交已鎖定的卡片！").SetErrorStyle();
+            return;
+        }
+
+        var count = session.GameState.CurrentTopic.AnswerCount;
+        if (LocalSelectedWords.Count != count)
+        {
+            AudioManager.Instance.PlayOneShot(AudioManager.Instance.errorFX);
+            UIManager.Instance.AddSystemToast($"提交的卡片數量不正確，需要 {count} 張。").SetErrorStyle();
             return;
         }
 
@@ -311,6 +322,43 @@ public class GameScreen : MonoBehaviour, IScreen
     
     public void OnChangeToState(StateOfGame state)
     {
+        var player = GameManager.Instance.Player;
+        var audios = AudioManager.Instance;
+        var session = player!.Session;
+        var screens = ScreenManager.Instance;
+        
+        if (state == StateOfGame.Started)
+        {
+            audios.PlayOneShot(audios.loginSuccessFX);
+            UIManager.Instance.AddTransitionStinger(() =>
+            {
+                ScreenManager.Instance.SwitchToPage(this);
+            });
+        }
+        else if (state == StateOfGame.ChoosingTopic)
+        {
+            audios.PlayOneShot(audios.topicChooseFX);
+            SwitchToFrame(player == session!.GameState.CurrentPlayer
+                ? chooseTopicFrame
+                : waitChooseTopicFrame);
+        }
+        else if (state == StateOfGame.ChoosingWord)
+        {
+            audios.PlayOneShot(audios.topicAppearFX);
+            SwitchToFrame(topicFrame);
+        }
+        else if (state == StateOfGame.ChoosingFinal)
+        {
+            audios.PlayOneShot(audios.finalChooseFX);
+        }
+        else if (state == StateOfGame.WinResult)
+        {
+            UIManager.Instance.AddTransitionStinger(() =>
+            {
+                screens.SwitchToPage(screens.winScreen);
+            });
+        }
+
         LocalSelectedWords.Clear();
 
         if (state == StateOfGame.ChoosingTopic)

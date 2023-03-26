@@ -98,10 +98,16 @@ public class NameSubmitButton : MonoBehaviour
         
         var manager = GameManager.Instance;
         if (manager.Game != null) return;
+
+        #if !UNITY_EDITOR
+        var uri = Constants.ServerUri.ToString();
+        #else
+        var uri = $"ws://127.0.0.1:5221/gateway";
+        #endif
         
         var game = manager.CreateGame(new GameOptions
         {
-            WebSocket = WebSocketFactory.CreateInstance(Constants.ServerUri.ToString()),
+            WebSocket = WebSocketFactory.CreateInstance(uri),
             PlayerName = inputField.text
         });
         
