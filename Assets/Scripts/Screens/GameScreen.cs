@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 using KaLib.Utils.Extensions;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameScreen : MonoBehaviour, IScreen
 {

@@ -1,22 +1,26 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class WordCardLayout : MonoBehaviour
 {
     public GameObject upperStack;
     public GameObject lowerStack;
 
+    private static RectTransform _transform;
+    
     public List<GameObject> Items { get; } = new();
 
     void Start()
     {
+        _transform = GetComponent<RectTransform>();
         RearrangeItems();
     }
 
     void Update()
     {
-        
+        LayoutRebuilder.ForceRebuildLayoutImmediate(_transform);
     }
 
     public void RearrangeItems()

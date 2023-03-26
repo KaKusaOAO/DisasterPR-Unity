@@ -40,6 +40,7 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         _instance = this;
+        Application.runInBackground = true;
         
         Logger.Logged += e =>
         {
@@ -66,8 +67,32 @@ public class GameManager : MonoBehaviour
         };
         Logger.RunManualPoll();
         Debug.Log("Registered logger");
-        
+
         DontDestroyOnLoad(gameObject);
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        _instance = this;
+
+        if (Application.isMobilePlatform)
+        {
+            Application.targetFrameRate = Screen.currentResolution.refreshRate;
+        }
+        else
+        {
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = -1;
+        }
+
+        while (!_queue.IsEmpty)
+        {
+            if (!_queue.TryDequeue(out var action)) continue;
+            action();
+
+            Logger.PollEvents();
+        }
     }
 
     public void ResetGame()
@@ -281,19 +306,6 @@ public class GameManager : MonoBehaviour
 
         Connection?.WebSocket.Close();
         _game = null;
-    }
-    
-    // Update is called once per frame
-    void Update()
-    {
-        _instance = this;
-        while (!_queue.IsEmpty)
-        {
-            if (!_queue.TryDequeue(out var action)) continue;
-            action();
-            
-            Logger.PollEvents();
-        }
     }
 
     public void RunOnUnityThread(Action action)
