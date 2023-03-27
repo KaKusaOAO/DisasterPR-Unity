@@ -49,12 +49,15 @@ public class HoldingWordCard : MonoBehaviour
         var session = player?.Session;
         if (session == null) return;
 
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
         if (session.GameState.CurrentTopic == null) return;
         
         var word = player.HoldingCards[index];
         var screen = ScreenManager.Instance.gameScreen;
         selected = screen.LocalSelectedWords.Contains(word);
         labelText.text = word.Card.Label;
+
+        cardLock.gameObject.SetActive(session.Options.CanLockCards);
         cardLock.locked = word.IsLocked;
 
         // Badge code starts, nothing goes under this part!!!!
