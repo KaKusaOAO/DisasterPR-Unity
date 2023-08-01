@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DisasterPR;
+using DisasterPR.Net.Packets.Play;
 using DisasterPR.Sessions;
-using JetBrains.Annotations;
-using KaLib.Utils.Extensions;
+using Mochi.Utils.Extensions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -150,6 +150,10 @@ public class GameScreen : MonoBehaviour, IScreen
 
     public void UpdateWords()
     {
+        // Clear the selected words
+        LocalSelectedWords.Clear();
+        
+        // Prepare the UI
         holdingWordsLayout.DestroyAll();
         
         var player = GameManager.Instance.Player;
@@ -258,6 +262,18 @@ public class GameScreen : MonoBehaviour, IScreen
     {
         ScreenManager.Instance.SwitchToFlowingBackground();
         UIManager.Instance.chatBox.SetActive(true);
+    }
+
+    public void ClientRequestShuffleCards()
+    {
+        var manager = GameManager.Instance;
+        if (manager == null) return;
+        
+        var player = manager.Player;
+        if (player == null) return;
+        
+        player.Connection.SendPacket(new ServerboundRequestShuffleWordsPacket());
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
     }
 
     public void OnRevealWord(Guid guid)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DisasterPR;
 using DisasterPR.Net.Packets.Play;
-using KaLib.Utils.Extensions;
+using Mochi.Utils.Extensions;
 using TMPro;
 using UnityEngine;
 

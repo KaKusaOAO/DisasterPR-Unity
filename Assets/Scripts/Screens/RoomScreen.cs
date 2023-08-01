@@ -32,8 +32,8 @@ public class RoomScreen : MonoBehaviour, IScreen
     public TMP_Text topicTimeText;
     public TMP_Text answerTimeText;
     public TMP_Text finalTimeText;
-
     public TMP_Text countText;
+    public GameObject lockAbilityToggle;
     public bool CountNeedsUpdate { get; set; }
 
     void Start()
@@ -73,7 +73,6 @@ public class RoomScreen : MonoBehaviour, IScreen
         AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
         var score = Math.Clamp(value, 2, 9);
         session.Options.WinScore = score;
-
         
         var manager = GameManager.Instance;
         manager.Connection!.SendPacket(new ServerboundUpdateSessionOptionsPacket(manager.Session!));
@@ -102,6 +101,19 @@ public class RoomScreen : MonoBehaviour, IScreen
         var options = manager.Session!.Options;
         manager.Connection!.SendPacket(new ServerboundUpdateSessionOptionsPacket(
             options.WinScore, CountdownTimeSet.TimeSets[newIndex], options.EnabledCategories));
+    }
+
+    public void UpdateLockAbility(Toggle toggle)
+    {
+        var game = GameManager.Instance.Game;
+        if (game == null) return;
+
+        var session = game.Player!.Session;
+        if (session == null) return;
+        session.Options.CanLockCards = toggle.isOn;
+        
+        var manager = GameManager.Instance;
+        manager.Connection!.SendPacket(new ServerboundUpdateSessionOptionsPacket(manager.Session!));
     }
 
     void Update()
@@ -156,6 +168,9 @@ public class RoomScreen : MonoBehaviour, IScreen
         {
             btn.interactable = topicTime > 5;
         }
+        
+        lockAbilityToggle.SetActive(isHost);
+        lockAbilityToggle.GetComponent<Toggle>().isOn = session.Options.CanLockCards;
 
         if (CountNeedsUpdate)
         {

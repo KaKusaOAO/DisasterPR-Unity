@@ -5,11 +5,12 @@ using DisasterPR;
 using DisasterPR.Client;
 using DisasterPR.Client.Unity;
 using DisasterPR.Events;
+using DisasterPR.Net.Packets.Login;
 using HybridWebSocket;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Logger = KaLib.Utils.Logger;
+using Logger = Mochi.Utils.Logger;
 using Task = System.Threading.Tasks.Task;
 
 public class NameSubmitButton : MonoBehaviour
@@ -41,9 +42,11 @@ public class NameSubmitButton : MonoBehaviour
         if (State is LoginState.LoggingIn or LoginState.Success)
         {
             _button.interactable = false;
+            inputField.interactable = false;
         }
         else
         {
+            inputField.interactable = true; // string.IsNullOrEmpty(DiscordIntegrateHelper.DCGetAccessToken());
             _button.interactable = !string.IsNullOrWhiteSpace(inputField.text);
         }
         
@@ -90,8 +93,9 @@ public class NameSubmitButton : MonoBehaviour
         }
     }
 
+    public void OnButtonClick() => StartLoginSequence(ServerboundLoginPacket.LoginType.Plain);
 
-    public void OnButtonClick()
+    public void StartLoginSequence(ServerboundLoginPacket.LoginType type)
     {
         var audios = AudioManager.Instance;
         audios.PlayOneShot(audios.buttonFX);
@@ -99,11 +103,11 @@ public class NameSubmitButton : MonoBehaviour
         var manager = GameManager.Instance;
         if (manager.Game != null) return;
 
-        #if !UNITY_EDITOR
+        // #if !UNITY_EDITOR
         var uri = Constants.ServerUri.ToString();
-        #else
-        var uri = $"ws://127.0.0.1:5221/gateway";
-        #endif
+        // #else
+        // var uri = $"ws://127.0.0.1:5221/gateway";
+        // #endif
         
         var game = manager.CreateGame(new GameOptions
         {
@@ -113,7 +117,7 @@ public class NameSubmitButton : MonoBehaviour
         
         Debug.Log("Logging in...");
         State = LoginState.LoggingIn;
-        game.LoginPlayer();
+        game.LoginPlayer(type);
 
         Debug.Log("Logged in!");
         Debug.Log("Checking connection...");

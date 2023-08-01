@@ -15,9 +15,9 @@ using DisasterPR.Net.Packets.Login;
 using DisasterPR.Net.Packets.Play;
 using DisasterPR.Sessions;
 using JetBrains.Annotations;
-using KaLib.Utils;
+using Mochi.Utils;
 using UnityEngine;
-using Logger = KaLib.Utils.Logger;
+using Logger = Mochi.Utils.Logger;
 
 public class GameManager : MonoBehaviour
 {
@@ -69,6 +69,16 @@ public class GameManager : MonoBehaviour
         Debug.Log("Registered logger");
 
         DontDestroyOnLoad(gameObject);
+        
+        DiscordIntegrateHelper.AccessTokenUpdated += () =>
+        {
+            var token = DiscordIntegrateHelper.DCGetAccessToken();
+            if (!string.IsNullOrEmpty(token) && ScreenManager.Instance.landingScreen.isActiveAndEnabled)
+            {
+                UIManager.Instance.AddSystemToast("Discord 登入資訊已更新！正在以 Discord 帳號登入...");
+                ScreenManager.Instance.landingScreen.button.StartLoginSequence(ServerboundLoginPacket.LoginType.Discord);
+            }
+        };
     }
 
     // Update is called once per frame
@@ -126,9 +136,13 @@ public class GameManager : MonoBehaviour
         var screens = ScreenManager.Instance;
 
         void AddPacketHandler<T>(Action<T> handler) where T : IPacket => 
-            connection.AddTypedPacketHandler<T>(packet => RunOnUnityThread(() => handler(packet)));
+            connection.AddTypedPacketHandler<T>(packet => RunOnUnityThread(() =>
+            {
+                Logger.Verbose($"Packet: {typeof(T)}");
+                handler(packet);
+            }));
 
-        AddPacketHandler<ClientboundAckPacket>(_ =>
+        AddPacketHandler<ClientboundAckLoginPacket>(_ =>
         {
             screens.landingScreen.button.State = NameSubmitButton.LoginState.Success;
             audios.PlayOneShot(audios.loginSuccessFX);
