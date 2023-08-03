@@ -125,6 +125,9 @@ var WebGLInput = {
 	WebGLInputIsFocus: function (id) {
 		return instances[id] === document.activeElement;
 	},
+	WebGLInputIsMobile: function () {
+		return /(iPhone|iPad|Macintosh|Mobile|Android)/i.test(navigator.userAgent);
+	},
 	WebGLInputOnValueChange:function(id, cb){
         var input = instances[id];
         input.oninput = function () {

@@ -28,7 +28,7 @@ public class TransitionStinger : MonoBehaviour
         {
             var progress = Mathf.Clamp(time / 1.25f, 0, 1);
             progress = Mathf.Pow(progress, 4);
-            _transform.anchoredPosition = new Vector3(0, (1 - progress) * 1080, 0);
+            _transform.anchoredPosition = new Vector3(0, (1 - progress) * _transform.rect.height, 0);
         } 
         else if (time <= 1.8f)
         {

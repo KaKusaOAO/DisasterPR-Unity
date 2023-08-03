@@ -5,7 +5,8 @@ using Random = System.Random;
 
 public class CreditParticle : MonoBehaviour
 {
-    private Vector3 _velocity;
+    private RectTransform _transform;
+    private Vector2 _velocity;
     private float _startTime;
     private Image _image;
     
@@ -14,17 +15,18 @@ public class CreditParticle : MonoBehaviour
     {
         var random = new Random();
         var r = (float) random.NextDouble() * Mathf.PI * 2;
-        _velocity = new Vector3(Mathf.Cos(r), Mathf.Sin(r)) * Mathf.Lerp(5, 10, (float) random.NextDouble());
+        _velocity = new Vector2(Mathf.Cos(r), Mathf.Sin(r)) * Mathf.Lerp(5, 10, (float) random.NextDouble());
         _startTime = Time.time;
         _image = GetComponent<Image>();
+        _transform = GetComponent<RectTransform>();
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
         _velocity *= 0.9f;
-        _velocity += Vector3.down * 0.1f;
-        transform.position += _velocity;
+        _velocity += Vector2.down * 0.1f;
+        _transform.anchoredPosition += _velocity;
     }
 
     void Update()

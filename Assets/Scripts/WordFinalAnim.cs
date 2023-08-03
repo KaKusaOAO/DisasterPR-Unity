@@ -14,7 +14,7 @@ public class WordFinalAnim : MonoBehaviour
     void Update()
     {
         var progress = Mathf.Clamp(Time.time - _startTime, 0, 1);
-        progress = Mathf.Pow(progress, 1 / 3f);
+        progress = Mathf.Pow(progress, 4f);
         var newPos = Vector3.Lerp(sourcePos, desiredPos, progress);
         transform.position = newPos;
 
@@ -25,9 +25,10 @@ public class WordFinalAnim : MonoBehaviour
         
         AudioManager.Instance.PlayOneShot(AudioManager.Instance.rewardFX);
         
-        var obj = new GameObject();
+        var obj = new GameObject("CreditParticleEmitter", typeof(RectTransform));
         obj.transform.SetParent(UIManager.Instance.canvas.transform);
-        
+        obj.transform.localScale = Vector3.one;
+
         var emitter = obj.AddComponent<CreditParticleEmitter>();
         emitter.desiredPos = desiredPos;
         Destroy(gameObject);

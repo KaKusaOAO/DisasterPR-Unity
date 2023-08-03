@@ -34,7 +34,11 @@ var DiscordIntegrateHelper = {
     },
     
     DCStartAuthenticate: function() {
-        window.open("http://play.kakaouo.com/disasterpr/discord/oauth2");
+        return !!window.open("http://play.kakaouo.com/u_game/discord/oauth2");
+    },
+
+    DCStartAuthenticateNoPopup: function() {
+        location.href = "http://play.kakaouo.com/u_game/discord/oauth2?nopopup"
     }
 };
 

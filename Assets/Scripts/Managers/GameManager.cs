@@ -76,7 +76,7 @@ public class GameManager : MonoBehaviour
             if (!string.IsNullOrEmpty(token) && ScreenManager.Instance.landingScreen.isActiveAndEnabled)
             {
                 UIManager.Instance.AddSystemToast("Discord 登入資訊已更新！正在以 Discord 帳號登入...");
-                ScreenManager.Instance.landingScreen.button.StartLoginSequence(ServerboundLoginPacket.LoginType.Discord);
+                ScreenManager.Instance.landingScreen.button.StartLoginSequence(PlayerPlatform.Discord);
             }
         };
     }
@@ -208,7 +208,7 @@ public class GameManager : MonoBehaviour
             var session = _game.Player.Session;
             if (session!.GameState.CurrentState != StateOfGame.Waiting) return;
             
-            var pl = session.Players.Find(p => packet.PlayerId == p.Id);
+            var pl = session.Players.Find(p => packet.Player.Guid == p.Id);
             var index = session.Players.IndexOf(pl);
             screens.roomScreen.OnAddPlayer(index);
         });

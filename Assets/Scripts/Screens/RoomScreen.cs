@@ -23,9 +23,8 @@ public class RoomScreen : MonoBehaviour, IScreen
     public Button winScoreRemoveButton;
     public TMP_Text roomPlayerCountText;
     public Button startButton;
-    public Image startButtonImage;
-    public Sprite startButtonLockSprite;
-    public Sprite startButtonUnlockSprite;
+    public Button readyToggleButton;
+    public TMP_Text readyToggleText;
     public Button[] countdownPlusButtons;
     public Button[] countdownMinusButtons;
 
@@ -35,10 +34,6 @@ public class RoomScreen : MonoBehaviour, IScreen
     public TMP_Text countText;
     public GameObject lockAbilityToggle;
     public bool CountNeedsUpdate { get; set; }
-
-    void Start()
-    {
-    }
 
     public void AddWinScore()
     {
@@ -125,9 +120,18 @@ public class RoomScreen : MonoBehaviour, IScreen
         if (session == null) return;
 
         var isHost = session.HostPlayer == game.Player;
+        if (isHost && game.Player.State != PlayerState.Ready && session.GameState.CurrentState == StateOfGame.Waiting)
+        {
+            game.Player.State = PlayerState.Ready;
+            game.Player.Connection.SendPacket(new ServerboundUpdatePlayerStatePacket(game.Player));
+        }
+        
         winScoreAddButton.gameObject.SetActive(isHost);
         winScoreRemoveButton.gameObject.SetActive(isHost);
-        
+        startButton.gameObject.SetActive(isHost);
+        readyToggleButton.gameObject.SetActive(!isHost);
+        readyToggleText.text = game.Player.State == PlayerState.Ready ? "取消準備" : "準備！";
+
         foreach (var btn in countdownPlusButtons)
         {
             btn.gameObject.SetActive(isHost);
@@ -148,10 +152,14 @@ public class RoomScreen : MonoBehaviour, IScreen
         var players = session.Players;
         roomPlayerCountText.text = $"{players.Count}人";
 
-        var canStart = players.Count(p => p.State == PlayerState.Ready) >= 3;
+        var canStart = players.Count >= 3 && players.All(p => p.State == PlayerState.Ready);
         var canStartIsHost = canStart && isHost;
+        if (!startButton.interactable && canStartIsHost)
+        {
+            AudioManager.Instance.PlayOneShot(AudioManager.Instance.popFX);    
+        }
+        
         startButton.interactable = canStartIsHost;
-        startButtonImage.sprite = canStart ? startButtonUnlockSprite : startButtonLockSprite;
 
         var timeSet = session.Options.CountdownTimeSet;
         topicTimeText.text = timeSet.TopicChooseTime.ToString();
@@ -244,6 +252,19 @@ public class RoomScreen : MonoBehaviour, IScreen
         game.Player.Connection.SendPacket(new ServerboundRequestRoomStartPacket());
     }
 
+    public void RequestUpdatePlayerReadyState()
+    {
+        var game = GameManager.Instance.Game;
+        if (game == null) return;
+
+        var session = game.Player!.Session;
+        if (session == null) return;
+
+        AudioManager.Instance.PlayOneShot(AudioManager.Instance.buttonFX);
+        game.Player.State = game.Player.State == PlayerState.Ready ? PlayerState.NotReady : PlayerState.Ready;
+        game.Player.Connection.SendPacket(new ServerboundUpdatePlayerStatePacket(game.Player));
+    }
+
     public void OnTransitionedIn()
     {
         for (var c = 0; c < playerListContainer.childCount; c++)
@@ -276,7 +297,7 @@ public class RoomScreen : MonoBehaviour, IScreen
         CountNeedsUpdate = true;
         LayoutRebuilder.ForceRebuildLayoutImmediate(playerListContainer.GetComponent<RectTransform>());
 
-        game.Player.State = PlayerState.Ready;
+        game.Player.State = PlayerState.NotReady;
         game.Player.Connection.SendPacket(new ServerboundUpdatePlayerStatePacket(game.Player));
     }
 

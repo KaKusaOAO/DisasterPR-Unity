@@ -96,13 +96,6 @@ public class LobbyScreen : MonoBehaviour, IScreen
         {
             State = RoomJoinState.None;
         }
-        
-        var player = GameManager.Instance.Player;
-
-        var sprites = AvatarManager.Instance.sprites;
-        var sprite = sprites[Math.Abs(player!.Id.GetHashCode()) % sprites.Length];
-        profile.avatarImage.sprite = sprite;
-        profile.nameText.text = player.Name;
     }
 
     public void OnTransitionedOut()

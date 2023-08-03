@@ -15,7 +15,9 @@ public static class DiscordIntegrateHelper
     public static extern string DCGetAccessToken();
     
     [DllImport("__Internal")]
-    public static extern void DCStartAuthenticate();
+    public static extern bool DCStartAuthenticate();
+    [DllImport("__Internal")]
+    public static extern void DCStartAuthenticateNoPopup();
 #else
     public static void DCSetOnAccessTokenUpdated(OnAccessTokenUpdatedCallback callback)
     {
@@ -28,7 +30,13 @@ public static class DiscordIntegrateHelper
         return "";
     }
 
-    public static void DCStartAuthenticate()
+    public static bool DCStartAuthenticate()
+    {
+        // Stub.
+        return false;
+    }
+
+    public static void DCStartAuthenticateNoPopup()
     {
         // Stub.
     }

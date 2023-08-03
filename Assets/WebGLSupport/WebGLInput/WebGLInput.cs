@@ -69,6 +69,9 @@ namespace WebGLSupport
         [DllImport("__Internal")]
         public static extern void WebGLInputForceBlur(int id);
 
+        [DllImport("__Internal")]
+        public static extern bool WebGLInputIsMobile();
+
 #if WEBGLINPUT_TAB
         [DllImport("__Internal")]
         public static extern void WebGLInputEnableTabText(int id, bool enable);
@@ -92,6 +95,7 @@ namespace WebGLSupport
         public static bool WebGLInputIsFocus(int id) { return false; }
         public static void WebGLInputDelete(int id) { }
         public static void WebGLInputForceBlur(int id) { }
+        public static bool WebGLInputIsMobile() => Application.isMobilePlatform;
 
 #if WEBGLINPUT_TAB
         public static void WebGLInputEnableTabText(int id, bool enable) { }
@@ -145,7 +149,7 @@ namespace WebGLSupport
             enabled = false;
 #endif
             // モバイルの入力対応
-            if (Application.isMobilePlatform)
+            if (WebGLInputPlugin.WebGLInputIsMobile())
             {
                 gameObject.AddComponent<WebGLInputMobile>();
             }
@@ -159,7 +163,7 @@ namespace WebGLSupport
         {
             var rect = GetScreenCoordinates(input.RectTransform());
             // モバイルの場合、強制表示する
-            if (showHtmlElement || Application.isMobilePlatform)
+            if (showHtmlElement || WebGLInputPlugin.WebGLInputIsMobile())
             {
                 var x = (int)(rect.x);
                 var y = (int)(Screen.height - (rect.y + rect.height));
@@ -186,8 +190,9 @@ namespace WebGLSupport
             var fontSize = Mathf.Max(14, input.fontSize); // limit font size : 14 !!
 
             // モバイルの場合、強制表示する
-            var isHidden = !(showHtmlElement || Application.isMobilePlatform);
-            id = WebGLInputPlugin.WebGLInputCreate(WebGLInput.CanvasId, rect.x, rect.y, rect.width, rect.height, fontSize, input.text, input.placeholder, input.lineType != LineType.SingleLine, isPassword, isHidden, Application.isMobilePlatform);
+            var isMobile = WebGLInputPlugin.WebGLInputIsMobile();
+            var isHidden = !(showHtmlElement || isMobile);
+            id = WebGLInputPlugin.WebGLInputCreate(WebGLInput.CanvasId, rect.x, rect.y, rect.width, rect.height, fontSize, input.text, input.placeholder, input.lineType != LineType.SingleLine, isPassword, isHidden, isMobile);
 
             instances[id] = this;
             WebGLInputPlugin.WebGLInputEnterSubmit(id, input.lineType != LineType.MultiLineNewline);
@@ -351,7 +356,7 @@ namespace WebGLSupport
             // 未登録の場合、選択する
             if (!instances.ContainsKey(id))
             {
-                if (Application.isMobilePlatform)
+                if (WebGLInputPlugin.WebGLInputIsMobile())
                 {
                     return;
                 } else
@@ -361,7 +366,7 @@ namespace WebGLSupport
             }
             else if (!WebGLInputPlugin.WebGLInputIsFocus(id))
             {
-                if (Application.isMobilePlatform)
+                if (WebGLInputPlugin.WebGLInputIsMobile())
                 {
                     //input.DeactivateInputField();
                     return;
@@ -420,7 +425,7 @@ namespace WebGLSupport
 
         public void CheckOutFocus()
         {
-            if (!Application.isMobilePlatform) return;
+            if (!WebGLInputPlugin.WebGLInputIsMobile()) return;
             if (!instances.ContainsKey(id)) return;
             var current = EventSystem.current.currentSelectedGameObject;
             if (current != null) return;

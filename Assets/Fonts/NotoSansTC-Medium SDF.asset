@@ -59,9 +59,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NotoSansTC-Medium SDF
   m_EditorClassIdentifier: 
-  hashCode: 0
+  hashCode: -1103872061
   material: {fileID: 1090035800954348557}
-  materialHashCode: 0
+  materialHashCode: 314809603
   m_Version: 1.1.0
   m_SourceFontFileGUID: 9e8693fe14c4844dd80b2b13d437bc50
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 9e8693fe14c4844dd80b2b13d437bc50, type: 3}
@@ -75,11 +75,11 @@ MonoBehaviour:
     m_Scale: 1
     m_UnitsPerEM: 1000
     m_LineHeight: 130.32
-    m_AscentLine: 104.4
+    m_AscentLine: 100.9
     m_CapLine: 66
     m_MeanLine: 49
     m_Baseline: 0
-    m_DescentLine: -25.92
+    m_DescentLine: -36.6
     m_SuperscriptOffset: 104.4
     m_SuperscriptSize: 0.5
     m_SubscriptOffset: -25.92
@@ -94,7 +94,7 @@ MonoBehaviour:
   m_AtlasTextures:
   - {fileID: -601364320760518943}
   m_AtlasTextureIndex: 0
-  m_IsMultiAtlasTexturesEnabled: 0
+  m_IsMultiAtlasTexturesEnabled: 1
   m_ClearDynamicDataOnBuild: 0
   m_UsedGlyphRects: []
   m_FreeGlyphRects:

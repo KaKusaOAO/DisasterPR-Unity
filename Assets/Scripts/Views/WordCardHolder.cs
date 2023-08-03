@@ -11,11 +11,12 @@ public class WordCardHolder : MonoBehaviour
     public GameObject wordCardStackPrefab;
     private GameObject _created;
     private Vector3 _desiredPos;
+    private float _offset;
     
     // Start is called before the first frame update
     void Start()
     {
-        
+        _offset = Time.time;
     }
 
     // Update is called once per frame
@@ -29,7 +30,7 @@ public class WordCardHolder : MonoBehaviour
         if (_created == null) return;
 
         _created.transform.localPosition = Vector3.Lerp(_created.transform.localPosition,
-            _desiredPos + new Vector3(Mathf.Sin(Time.time) * 10, 0, 0), 1 - Time.fixedDeltaTime * 40);
+            _desiredPos + new Vector3(0, Mathf.Sin(Time.time - _offset) * 10, 0), 1 - Time.fixedDeltaTime * 40);
     }
 
     public void OnChosenAppear()
@@ -41,7 +42,7 @@ public class WordCardHolder : MonoBehaviour
         item.Init();
         
         _desiredPos = _created.transform.localPosition;
-        _created!.transform.localPosition += new Vector3(-500, 0, 0);
+        _created!.transform.localPosition += new Vector3(0, -500, 0);
     }
 
     // ReSharper disable once Unity.NoNullPropagation

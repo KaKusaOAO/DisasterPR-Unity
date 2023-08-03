@@ -25,7 +25,7 @@ namespace DisasterPR.Client.Unity
             };
         }
 
-        public void LoginPlayer(ServerboundLoginPacket.LoginType type = ServerboundLoginPacket.LoginType.Plain)
+        public void LoginPlayer(PlayerPlatform type = PlayerPlatform.Plain)
         {
             if (Player == null) return;
         

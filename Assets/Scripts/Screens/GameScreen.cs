@@ -31,24 +31,26 @@ public class GameScreen : MonoBehaviour, IScreen
     public GameObject wordHolderPrefab;
 
     public WordCardLayout holdingWordsLayout;
+    private RectTransform _holdingWordsTransform;
     public GameObject holdingWordPrefab;
 
     public GameObject chooseWordButton;
     public GameObject chooseFinalButton;
-    public GameObject roomIdContainer;
+    public TMP_Text roomIdHintText;
 
-    private TMP_Text _roomIdHintText;
-
-    private Vector3 _holdingWordsPosition0;
+    private Vector2 _holdingWordsPosition0;
 
     private List<WordCardHolder> _holders = new();
+    public bool previewTopic = false;
 
     public List<HoldingWordCardEntry> LocalSelectedWords { get; } = new();
     public int LocalChosenFinalIndex { get; set; } = -1;
 
     void Awake()
     {
-        _holdingWordsPosition0 = holdingWordsLayout.transform.localPosition;
+        _holdingWordsTransform = holdingWordsLayout.GetComponent<RectTransform>();
+        _holdingWordsPosition0 = _holdingWordsTransform.anchoredPosition;
+        
     }
 
     void FixedUpdate()
@@ -64,8 +66,8 @@ public class GameScreen : MonoBehaviour, IScreen
             .Find(c => c.PlayerId == GameManager.Instance.Player!.Id);
         var canShowChatBox = session.GameState.CurrentState != StateOfGame.ChoosingWord ||
                              session.GameState.CurrentPlayer == player || chosen != null;
-        holdingWordsLayout.transform.localPosition = Vector3.Lerp(holdingWordsLayout.transform.localPosition,
-            new Vector3(canShowChatBox ? -550 : 0, 0, 0) + _holdingWordsPosition0, 1 - Time.fixedDeltaTime * 40);
+        _holdingWordsTransform.anchoredPosition = Vector2.Lerp(_holdingWordsTransform.anchoredPosition,
+            new Vector2(0, canShowChatBox ? -500 : 0) + _holdingWordsPosition0, 1 - Time.fixedDeltaTime * 40);
     }
 
     void Update()
@@ -84,6 +86,30 @@ public class GameScreen : MonoBehaviour, IScreen
                              session.GameState.CurrentPlayer == player || chosen != null;
         UIManager.Instance.chatBox.SetActive(canShowChatBox);
         
+        if (session.GameState.CurrentState == StateOfGame.ChoosingWord)
+        {
+            var topic = session.GameState.CurrentTopic;
+            var sb = new StringBuilder();
+            sb.Append(topic.Texts.First());
+            
+            for (var i = 0; i < topic.AnswerCount; i++)
+            {
+                if (!previewTopic || i >= LocalSelectedWords.Count || canShowChatBox)
+                {
+                    sb.Append("\ue999\ue999\ue999\ue999");
+                }
+                else
+                {
+                    var word = LocalSelectedWords[i].Card;
+                    sb.Append($"<color=#128c85>{word.Label}</color>");
+                }
+
+                sb.Append(topic.Texts[i + 1]);
+            }
+
+            topicText.text = sb.ToString();
+        }
+
         chooseWordButton.SetActive(LocalSelectedWords.Any());
         chooseFinalButton.SetActive(session.GameState.CurrentPlayer == player && LocalChosenFinalIndex != -1);
 
@@ -93,9 +119,9 @@ public class GameScreen : MonoBehaviour, IScreen
         var currPlayerName = currPlayer == player ? "你" : currPlayer.Name;
         currentPlayerText.text = $"值日生：<b>{currPlayerName}</b>";
 
-        if (_roomIdHintText != null)
+        if (roomIdHintText != null)
         {
-            _roomIdHintText.text = $"房號：{session.RoomId}";
+            roomIdHintText.text = $"房號：{session.RoomId}";
         }
     }
 
@@ -118,7 +144,7 @@ public class GameScreen : MonoBehaviour, IScreen
         }
 
         frame.SetActive(true);
-
+        holdingWordsLayout.gameObject.SetActive(frame == topicFrame);
         if (frame == topicFrame)
         {
             var player = GameManager.Instance.Player;
@@ -211,9 +237,6 @@ public class GameScreen : MonoBehaviour, IScreen
             it.index = i;
             i++;
         }
-
-        var container = Instantiate(roomIdContainer, playerListContainer);
-        _roomIdHintText = container.GetComponentInChildren<TMP_Text>();
     }
 
     public void SubmitSelectedWords()
@@ -366,6 +389,17 @@ public class GameScreen : MonoBehaviour, IScreen
         }
         else if (state == StateOfGame.ChoosingFinal)
         {
+            var topic = session!.GameState.CurrentTopic;
+            var sb = new StringBuilder();
+            sb.Append(topic.Texts.First());
+            
+            for (var i = 0; i < topic.AnswerCount; i++)
+            {
+                sb.Append("\ue999\ue999\ue999\ue999");
+                sb.Append(topic.Texts[i + 1]);
+            }
+
+            topicText.text = sb.ToString();
             audios.PlayOneShot(audios.finalChooseFX);
         }
         else if (state == StateOfGame.WinResult)

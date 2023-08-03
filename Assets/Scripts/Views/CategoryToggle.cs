@@ -11,9 +11,9 @@ using UnityEngine.UI;
 public class CategoryToggle : MonoBehaviour
 {
     public int index;
-    public Sprite onSprite;
-    public Sprite offSprite;
     public bool categoryEnabled;
+    public Color onColor;
+    public Color offColor;
     public TMP_Text text;
     
     private Image _image;
@@ -31,9 +31,10 @@ public class CategoryToggle : MonoBehaviour
         var category = cardPack.Categories[index];
 
         categoryEnabled = options.EnabledCategories.Contains(category);
-        _image.sprite = categoryEnabled ? onSprite : offSprite;
+        _image.color = categoryEnabled ? onColor : offColor;
 
         text.text = category.Label;
+        text.color = categoryEnabled ? Color.white : Color.black;
     }
 
     public void OnToggle()

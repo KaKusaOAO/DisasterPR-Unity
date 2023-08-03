@@ -164,9 +164,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71c1514a6bd24e1e882cebbe1904ce04, type: 3}
   m_Name: NotoSansTC-Light SDF
   m_EditorClassIdentifier: 
-  hashCode: 0
+  hashCode: -835470048
   material: {fileID: -8101182797941153453}
-  materialHashCode: 0
+  materialHashCode: -1572570368
   m_Version: 1.1.0
   m_SourceFontFileGUID: 57ff6a2af03ec4ca1af691b50eaebe4c
   m_SourceFontFile_EditorRef: {fileID: 12800000, guid: 57ff6a2af03ec4ca1af691b50eaebe4c, type: 3}
@@ -180,11 +180,11 @@ MonoBehaviour:
     m_Scale: 1
     m_UnitsPerEM: 1000
     m_LineHeight: 130.32
-    m_AscentLine: 104.4
+    m_AscentLine: 100.9
     m_CapLine: 66
     m_MeanLine: 48
     m_Baseline: 0
-    m_DescentLine: -25.92
+    m_DescentLine: -36.6
     m_SuperscriptOffset: 104.4
     m_SuperscriptSize: 0.5
     m_SubscriptOffset: -25.92
@@ -199,7 +199,7 @@ MonoBehaviour:
   m_AtlasTextures:
   - {fileID: -1078266002462899099}
   m_AtlasTextureIndex: 0
-  m_IsMultiAtlasTexturesEnabled: 0
+  m_IsMultiAtlasTexturesEnabled: 1
   m_ClearDynamicDataOnBuild: 0
   m_UsedGlyphRects: []
   m_FreeGlyphRects:

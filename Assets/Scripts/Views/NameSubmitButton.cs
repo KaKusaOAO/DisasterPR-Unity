@@ -93,9 +93,9 @@ public class NameSubmitButton : MonoBehaviour
         }
     }
 
-    public void OnButtonClick() => StartLoginSequence(ServerboundLoginPacket.LoginType.Plain);
+    public void OnButtonClick() => StartLoginSequence(PlayerPlatform.Plain);
 
-    public void StartLoginSequence(ServerboundLoginPacket.LoginType type)
+    public void StartLoginSequence(PlayerPlatform type)
     {
         var audios = AudioManager.Instance;
         audios.PlayOneShot(audios.buttonFX);

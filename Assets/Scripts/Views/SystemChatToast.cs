@@ -125,7 +125,12 @@ public class SystemChatToast : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
+
+    void Update()
+    {
+        LayoutRebuilder.ForceRebuildLayoutImmediate(_transform);
+    }
+
     public void SetDefaultStyle()
     {
         image.color = Color.black;

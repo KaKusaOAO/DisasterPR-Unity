@@ -34,7 +34,7 @@ public class HoldingWordCard : MonoBehaviour
     void FixedUpdate()
     {
         image.transform.localPosition = Vector3.Lerp(image.transform.localPosition,
-            new Vector3(selected ? 100 : 0, 0, 0), 1 - Time.fixedDeltaTime * 20);
+            new Vector3(0, selected ? 70 : 0, 0), 1 - Time.fixedDeltaTime * 20);
     }
 
     // Update is called once per frame

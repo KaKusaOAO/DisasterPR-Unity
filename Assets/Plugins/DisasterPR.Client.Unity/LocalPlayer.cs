@@ -14,7 +14,7 @@ namespace DisasterPR.Client.Unity
 
         public override List<HoldingWordCardEntry> HoldingCards { get; } = new();
 
-        private ServerboundLoginPacket.LoginType _type;
+        private PlayerPlatform _type;
 
         public LocalPlayer(IWebSocket webSocket, string name) : base(name)
         {
@@ -22,7 +22,7 @@ namespace DisasterPR.Client.Unity
             Connection.WebSocket.OnOpen += InternalLogin;
         }
 
-        public void Login(ServerboundLoginPacket.LoginType type)
+        public void Login(PlayerPlatform type)
         {
             _type = type;
             Connection.Connect();
@@ -36,10 +36,10 @@ namespace DisasterPR.Client.Unity
 
             switch (_type)
             {
-                case ServerboundLoginPacket.LoginType.Plain:
+                case PlayerPlatform.Plain:
                     Connection.SendPacket(new ServerboundLoginPacket(Name));
                     break;
-                case ServerboundLoginPacket.LoginType.Discord:
+                case PlayerPlatform.Discord:
                     var token = DiscordIntegrateHelper.DCGetAccessToken();
                     Connection.SendPacket(ServerboundLoginPacket.CreateDiscord(token));
                     break;
